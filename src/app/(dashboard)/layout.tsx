@@ -6,7 +6,7 @@ import { LayoutProvider, useLayout } from "@/components/layout-provider";
 
 function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const { sidebarCollapsed, isMobile } = useLayout();
-  const marginLeft = isMobile ? 0 : sidebarCollapsed ? 72 : 260;
+  const marginLeft = isMobile ? 0 : sidebarCollapsed ? 76 : 270;
 
   return (
     <div className="min-h-screen flex">

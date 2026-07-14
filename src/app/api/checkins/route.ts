@@ -27,23 +27,22 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
   const { member_id, action } = body;
 
+  if (!member_id) {
+    return NextResponse.json({ error: "Member ID is required" }, { status: 400 });
+  }
+
+  // Verify member exists
+  const { data: member, error: memberError } = await getSupabase()
+    .from("members")
+    .select("id")
+    .eq("id", member_id)
+    .single();
+
+  if (memberError || !member) {
+    return NextResponse.json({ error: "Member not found" }, { status: 404 });
+  }
+
   if (action === "checkin") {
-    // Check if member has active membership
-    const { data: membership } = await getSupabase()
-      .from("member_memberships")
-      .select("*")
-      .eq("member_id", member_id)
-      .eq("is_active", true)
-      .gte("end_date", new Date().toISOString().split("T")[0])
-      .single();
-
-    if (!membership) {
-      return NextResponse.json(
-        { error: "Member does not have an active membership" },
-        { status: 400 }
-      );
-    }
-
     // Check if already checked in today
     const today = new Date().toISOString().split("T")[0];
     const { data: existingCheckIn } = await getSupabase()
@@ -56,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     if (existingCheckIn) {
       return NextResponse.json(
-        { error: "Member is already checked in" },
+        { error: "Member is already checked in today" },
         { status: 400 }
       );
     }
@@ -91,7 +90,7 @@ export async function POST(request: NextRequest) {
 
     if (!checkIn) {
       return NextResponse.json(
-        { error: "No active check-in found" },
+        { error: "No active check-in found for this member today" },
         { status: 400 }
       );
     }
