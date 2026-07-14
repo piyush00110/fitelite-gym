@@ -1,82 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Receipt,
   Search,
-  Filter,
-  Download,
+  Plus,
   TrendingUp,
   DollarSign,
   CreditCard,
   Banknote,
+  Loader2,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatsCard } from "@/components/stats-card";
+import { Modal } from "@/components/modal";
+import { PaymentForm } from "@/components/payment-form";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 interface Payment {
   id: string;
-  memberName: string;
+  member_id: string;
   amount: number;
-  paymentDate: string;
-  paymentMethod: string;
+  payment_date: string;
+  payment_method: string;
   notes: string;
+  member?: { first_name: string; last_name: string } | null;
 }
-
-const demoPayments: Payment[] = [
-  {
-    id: "1",
-    memberName: "Marcus Johnson",
-    amount: 49.99,
-    paymentDate: "2024-01-15T10:30:00",
-    paymentMethod: "Cash",
-    notes: "Monthly membership",
-  },
-  {
-    id: "2",
-    memberName: "Sarah Williams",
-    amount: 119.99,
-    paymentDate: "2024-01-14T14:20:00",
-    paymentMethod: "Credit Card",
-    notes: "Quarterly membership",
-  },
-  {
-    id: "3",
-    memberName: "David Chen",
-    amount: 399.99,
-    paymentDate: "2024-01-13T09:15:00",
-    paymentMethod: "Bank Transfer",
-    notes: "Yearly membership",
-  },
-  {
-    id: "4",
-    memberName: "Emma Rodriguez",
-    amount: 49.99,
-    paymentDate: "2024-01-12T16:45:00",
-    paymentMethod: "Cash",
-    notes: "Monthly membership renewal",
-  },
-  {
-    id: "5",
-    memberName: "James Wilson",
-    amount: 119.99,
-    paymentDate: "2024-01-11T11:00:00",
-    paymentMethod: "Credit Card",
-    notes: "Quarterly membership",
-  },
-  {
-    id: "6",
-    memberName: "Olivia Martinez",
-    amount: 49.99,
-    paymentDate: "2024-01-10T13:30:00",
-    paymentMethod: "Mobile Pay",
-    notes: "Monthly membership",
-  },
-];
 
 const methodIcons: Record<string, React.ElementType> = {
   Cash: Banknote,
@@ -93,18 +46,75 @@ const methodColors: Record<string, string> = {
 };
 
 export default function PaymentsPage() {
-  const [payments] = useState<Payment[]>(demoPayments);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+
+  const fetchPayments = useCallback(async () => {
+    try {
+      const res = await fetch("/api/payments");
+      if (res.ok) {
+        const data = await res.json();
+        setPayments(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch payments:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPayments().finally(() => setLoading(false));
+  }, [fetchPayments]);
+
+  const getMemberName = (p: Payment) => {
+    if (p.member) return `${p.member.first_name} ${p.member.last_name}`;
+    return "Unknown Member";
+  };
 
   const filteredPayments = payments.filter(
     (p) =>
-      p.memberName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.paymentMethod.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      getMemberName(p).toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.payment_method.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.notes.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
-  const averagePayment = totalRevenue / payments.length;
+  const averagePayment = payments.length > 0 ? totalRevenue / payments.length : 0;
+
+  const handleAddPayment = async (data: {
+    member_id: string;
+    amount: number;
+    payment_method: string;
+    notes: string;
+  }) => {
+    try {
+      const res = await fetch("/api/payments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        await fetchPayments();
+        setShowAddModal(false);
+      }
+    } catch (err) {
+      console.error("Failed to add payment:", err);
+    }
+  };
+
+  const handleDeletePayment = async (id: string) => {
+    try {
+      const res = await fetch(`/api/payments/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setPayments((prev) => prev.filter((p) => p.id !== id));
+        setShowDeleteConfirm(null);
+      }
+    } catch (err) {
+      console.error("Failed to delete payment:", err);
+    }
+  };
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -119,9 +129,9 @@ export default function PaymentsPage() {
             Track all payment transactions and revenue.
           </p>
         </div>
-        <Button variant="outline" className="w-full sm:w-auto">
-          <Download className="h-5 w-5" />
-          Export
+        <Button onClick={() => setShowAddModal(true)} className="w-full sm:w-auto">
+          <Plus className="h-5 w-5" />
+          Add Payment
         </Button>
       </div>
 
@@ -149,10 +159,10 @@ export default function PaymentsPage() {
         />
       </div>
 
-      {/* Search & Filter */}
+      {/* Search */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center gap-4">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -162,15 +172,11 @@ export default function PaymentsPage() {
                 className="pl-10"
               />
             </div>
-            <Button variant="outline">
-              <Filter className="h-4 w-4" />
-              Filter
-            </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Payments Table */}
+      {/* Payments List */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
@@ -179,49 +185,85 @@ export default function PaymentsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {filteredPayments.map((payment) => {
-              const MethodIcon = methodIcons[payment.paymentMethod] || CreditCard;
-              const colorClass =
-                methodColors[payment.paymentMethod] ||
-                "bg-gray-500/10 text-gray-600";
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : filteredPayments.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              {searchQuery ? "No payments match your search." : "No payments recorded yet."}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredPayments.map((payment) => {
+                const MethodIcon = methodIcons[payment.payment_method] || CreditCard;
+                const colorClass =
+                  methodColors[payment.payment_method] ||
+                  "bg-gray-500/10 text-gray-600";
 
-              return (
-                <div
-                  key={payment.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between rounded-xl border border-border p-3 sm:p-4 hover:bg-muted/50 transition-all gap-3"
-                >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`flex h-12 w-12 items-center justify-center rounded-xl ${colorClass}`}
-                    >
-                      <MethodIcon className="h-6 w-6" />
+                return (
+                  <div
+                    key={payment.id}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between rounded-xl border border-border p-3 sm:p-4 hover:bg-muted/50 transition-all gap-3"
+                  >
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <div
+                        className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl ${colorClass}`}
+                      >
+                        <MethodIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm sm:text-base">{getMemberName(payment)}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                          {payment.notes || "No notes"}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold">{payment.memberName}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {payment.notes}
+
+                    <div className="flex items-center gap-2 sm:gap-4 sm:flex-shrink-0 pl-12 sm:pl-0">
+                      <div className="text-right">
+                        <p className="text-xs sm:text-sm text-muted-foreground">
+                          {formatDate(payment.payment_date)}
+                        </p>
+                        <Badge variant="outline" className="text-xs">{payment.payment_method}</Badge>
+                      </div>
+                      <p className="text-base sm:text-lg font-bold text-success min-w-[80px] sm:min-w-[100px] text-right">
+                        +{formatCurrency(payment.amount)}
                       </p>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowDeleteConfirm(payment.id)}
+                        className="text-destructive hover:text-destructive h-8 w-8"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-3 sm:gap-6 sm:flex-shrink-0 pl-15 sm:pl-0">
-                    <div className="text-right">
-                      <p className="text-sm text-muted-foreground">
-                        {formatDate(payment.paymentDate)}
-                      </p>
-                      <Badge variant="outline">{payment.paymentMethod}</Badge>
-                    </div>
-                    <p className="text-lg font-bold text-success min-w-[100px] text-right">
-                      +{formatCurrency(payment.amount)}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Add Payment Modal */}
+      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Record Payment" size="lg">
+        <PaymentForm onSubmit={handleAddPayment} onCancel={() => setShowAddModal(false)} />
+      </Modal>
+
+      {/* Delete Confirmation */}
+      <Modal isOpen={!!showDeleteConfirm} onClose={() => setShowDeleteConfirm(null)} title="Delete Payment" size="sm">
+        <div className="space-y-4">
+          <p className="text-muted-foreground">
+            Are you sure you want to delete this payment record? This action cannot be undone.
+          </p>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+            <Button variant="outline" onClick={() => setShowDeleteConfirm(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={() => showDeleteConfirm && handleDeletePayment(showDeleteConfirm)}>Delete</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

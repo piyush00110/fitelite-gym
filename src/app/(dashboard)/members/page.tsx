@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Users,
   Search,
@@ -12,6 +12,7 @@ import {
   Phone,
   Calendar,
   ArrowUpDown,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,45 +24,94 @@ import { MemberForm } from "@/components/member-form";
 import { formatDate } from "@/lib/utils";
 import type { Member } from "@/types/database";
 
-const demoMembers: Member[] = [
-  { id: "1", first_name: "Marcus", last_name: "Johnson", email: "marcus.j@email.com", phone: "+1 (555) 123-4567", date_of_birth: "1990-05-15", join_date: "2024-01-15", is_active: true, avatar_url: null, created_at: "", updated_at: "" },
-  { id: "2", first_name: "Sarah", last_name: "Williams", email: "sarah.w@email.com", phone: "+1 (555) 234-5678", date_of_birth: "1988-08-22", join_date: "2024-02-20", is_active: true, avatar_url: null, created_at: "", updated_at: "" },
-  { id: "3", first_name: "David", last_name: "Chen", email: "david.c@email.com", phone: "+1 (555) 345-6789", date_of_birth: "1995-03-10", join_date: "2024-03-05", is_active: true, avatar_url: null, created_at: "", updated_at: "" },
-  { id: "4", first_name: "Emma", last_name: "Rodriguez", email: "emma.r@email.com", phone: "+1 (555) 456-7890", date_of_birth: "1992-11-28", join_date: "2024-04-12", is_active: false, avatar_url: null, created_at: "", updated_at: "" },
-  { id: "5", first_name: "James", last_name: "Wilson", email: "james.w@email.com", phone: "+1 (555) 567-8901", date_of_birth: "1987-07-04", join_date: "2024-05-01", is_active: true, avatar_url: null, created_at: "", updated_at: "" },
-  { id: "6", first_name: "Olivia", last_name: "Martinez", email: "olivia.m@email.com", phone: "+1 (555) 678-9012", date_of_birth: "1993-09-18", join_date: "2024-06-15", is_active: true, avatar_url: null, created_at: "", updated_at: "" },
-];
-
 export default function MembersPage() {
-  const [members, setMembers] = useState<Member[]>(demoMembers);
+  const [members, setMembers] = useState<Member[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
 
-  const filteredMembers = members.filter(
-    (m) =>
-      m.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.phone.includes(searchQuery)
-  );
+  const fetchMembers = useCallback(async (search?: string) => {
+    try {
+      const url = search ? `/api/members?search=${encodeURIComponent(search)}` : "/api/members";
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        setMembers(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch members:", err);
+    }
+  }, []);
 
-  const handleAdd = (data: Omit<Member, "id" | "created_at" | "updated_at">) => {
-    const newMember: Member = { ...data, id: String(Date.now()), created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
-    setMembers([newMember, ...members]);
-    setShowAddModal(false);
+  useEffect(() => {
+    fetchMembers().finally(() => setLoading(false));
+  }, [fetchMembers]);
+
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setSearching(false);
+      fetchMembers();
+      return;
+    }
+    setSearching(true);
+    const timer = setTimeout(() => {
+      fetchMembers(searchQuery).finally(() => setSearching(false));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, fetchMembers]);
+
+  const filteredMembers = searchQuery ? members : members;
+
+  const activeCount = members.filter((m) => m.is_active).length;
+
+  const handleAdd = async (data: Omit<Member, "id" | "created_at" | "updated_at">) => {
+    try {
+      const res = await fetch("/api/members", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        const newMember = await res.json();
+        setMembers((prev) => [newMember, ...prev]);
+        setShowAddModal(false);
+      }
+    } catch (err) {
+      console.error("Failed to add member:", err);
+    }
   };
 
-  const handleEdit = (data: Omit<Member, "id" | "created_at" | "updated_at">) => {
+  const handleEdit = async (data: Omit<Member, "id" | "created_at" | "updated_at">) => {
     if (!editingMember) return;
-    setMembers(members.map((m) => m.id === editingMember.id ? { ...m, ...data, updated_at: new Date().toISOString() } : m));
-    setEditingMember(null);
+    try {
+      const res = await fetch(`/api/members/${editingMember.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setMembers((prev) => prev.map((m) => (m.id === editingMember.id ? updated : m)));
+        setEditingMember(null);
+      }
+    } catch (err) {
+      console.error("Failed to edit member:", err);
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setMembers(members.filter((m) => m.id !== id));
-    setShowDeleteConfirm(null);
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`/api/members/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setMembers((prev) => prev.filter((m) => m.id !== id));
+        setShowDeleteConfirm(null);
+      }
+    } catch (err) {
+      console.error("Failed to delete member:", err);
+    }
   };
 
   return (
@@ -83,27 +133,22 @@ export default function MembersPage() {
         </Button>
       </div>
 
-      {/* Search & Filters */}
+      {/* Search */}
       <Card>
         <CardContent className="p-3 sm:p-4">
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search members..."
+                placeholder="Search by name, email, or phone..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
+              {(loading || searching) && (
+                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground animate-spin" />
+              )}
             </div>
-            <Button variant="outline" className="hidden sm:flex">
-              <Filter className="h-4 w-4" />
-              Filter
-            </Button>
-            <Button variant="outline" className="hidden sm:flex">
-              <ArrowUpDown className="h-4 w-4" />
-              Sort
-            </Button>
           </div>
         </CardContent>
       </Card>
@@ -114,56 +159,66 @@ export default function MembersPage() {
           <CardTitle className="flex items-center justify-between text-base sm:text-xl">
             <span>All Members ({filteredMembers.length})</span>
             <Badge variant="secondary">
-              {members.filter((m) => m.is_active).length} Active
+              {activeCount} Active
             </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {filteredMembers.map((member) => (
-              <div
-                key={member.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between rounded-xl border border-border p-3 sm:p-4 hover:bg-muted/50 transition-all gap-3"
-              >
-                <div className="flex items-center gap-3 sm:gap-4">
-                  <Avatar alt={`${member.first_name} ${member.last_name}`} size="md" />
-                  <div className="space-y-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-semibold text-sm sm:text-base">
-                        {member.first_name} {member.last_name}
-                      </p>
-                      <Badge variant={member.is_active ? "success" : "secondary"} className="text-xs">
-                        {member.is_active ? "Active" : "Inactive"}
-                      </Badge>
-                    </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Mail className="h-3 w-3 flex-shrink-0" />
-                        <span className="truncate">{member.email}</span>
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Phone className="h-3 w-3 flex-shrink-0" />
-                        {member.phone}
-                      </span>
-                      <span className="hidden md:flex items-center gap-1">
-                        <Calendar className="h-3 w-3 flex-shrink-0" />
-                        Joined {formatDate(member.join_date)}
-                      </span>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : filteredMembers.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              {searchQuery ? "No members match your search." : "No members yet. Add your first member!"}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredMembers.map((member) => (
+                <div
+                  key={member.id}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between rounded-xl border border-border p-3 sm:p-4 hover:bg-muted/50 transition-all gap-3"
+                >
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <Avatar alt={`${member.first_name} ${member.last_name}`} size="md" />
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-semibold text-sm sm:text-base">
+                          {member.first_name} {member.last_name}
+                        </p>
+                        <Badge variant={member.is_active ? "success" : "secondary"} className="text-xs">
+                          {member.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Mail className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{member.email}</span>
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Phone className="h-3 w-3 flex-shrink-0" />
+                          {member.phone}
+                        </span>
+                        <span className="hidden md:flex items-center gap-1">
+                          <Calendar className="h-3 w-3 flex-shrink-0" />
+                          Joined {formatDate(member.join_date)}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-2 sm:flex-shrink-0 pl-10 sm:pl-0">
-                  <Button variant="ghost" size="icon" onClick={() => setEditingMember(member)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => setShowDeleteConfirm(member.id)} className="text-danger hover:text-danger">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-2 sm:flex-shrink-0 pl-10 sm:pl-0">
+                    <Button variant="ghost" size="icon" onClick={() => setEditingMember(member)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => setShowDeleteConfirm(member.id)} className="text-danger hover:text-danger">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -185,7 +240,7 @@ export default function MembersPage() {
           <p className="text-muted-foreground">
             Are you sure you want to delete this member? This action cannot be undone.
           </p>
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
             <Button variant="outline" onClick={() => setShowDeleteConfirm(null)}>Cancel</Button>
             <Button variant="destructive" onClick={() => showDeleteConfirm && handleDelete(showDeleteConfirm)}>Delete</Button>
           </div>
