@@ -18,6 +18,8 @@ import { StatsCard } from "@/components/stats-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/avatar";
+import { PageTransition } from "@/components/page-transition";
+import { FloatingParticles } from "@/components/particles";
 import { formatCurrency } from "@/lib/utils";
 
 interface Stats {
@@ -67,8 +69,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8 bg-luxury min-h-full">
-      {/* Header */}
+    <div className="space-y-8 bg-luxury min-h-full relative">
+      <FloatingParticles />
+      <PageTransition>
       <div className="animate-fade-in-down">
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-3">
           Welcome back, <span className="gradient-text-gold">Admin</span>
@@ -195,6 +198,7 @@ export default function DashboardPage() {
           </div>
         </CardContent>
       </Card>
+      </PageTransition>
     </div>
   );
 }

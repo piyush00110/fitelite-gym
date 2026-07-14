@@ -505,3 +505,258 @@ body {
     radial-gradient(ellipse at 40% 80%, rgba(180, 83, 9, 0.04) 0%, transparent 50%),
     var(--background);
 }
+
+/* ============================================
+   NEXT-LEVEL ANIMATIONS
+   ============================================ */
+
+/* Confetti */
+@keyframes confetti {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-200px) rotate(720deg) scale(0.3);
+  }
+}
+
+.animate-confetti {
+  animation: confetti 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* Shimmer bg for skeletons */
+@keyframes shimmerBg2 {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer-bg {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 0%,
+    var(--muted) 30%,
+    rgba(245, 158, 11, 0.06) 50%,
+    var(--muted) 70%,
+    var(--muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmerBg2 1.8s ease-in-out infinite;
+}
+
+/* Ripple effect for buttons */
+@keyframes ripple-effect {
+  0% {
+    transform: scale(0);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-ripple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  transform: scale(0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.btn-ripple:active::after {
+  animation: ripple-effect 0.6s ease-out;
+}
+
+/* Card glow on hover */
+@keyframes cardGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+  50% { box-shadow: 0 0 30px -5px rgba(245, 158, 11, 0.15); }
+}
+
+.card-glow-hover {
+  transition: all 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.card-glow-hover:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow:
+    0 20px 40px -10px rgba(245, 158, 11, 0.15),
+    0 0 0 1px rgba(245, 158, 11, 0.1),
+    0 0 60px -10px rgba(245, 158, 11, 0.1);
+}
+
+/* Tilt effect */
+.tilt-hover {
+  transition: transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.tilt-hover:hover {
+  transform: rotateX(-2deg) rotateY(2deg) translateY(-4px);
+}
+
+/* Gradient border animation */
+@keyframes gradientBorderRotate {
+  0% { --gradient-angle: 0deg; }
+  100% { --gradient-angle: 360deg; }
+}
+
+@property --gradient-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.gradient-border-animated {
+  position: relative;
+  border: none !important;
+}
+
+.gradient-border-animated::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(
+    var(--gradient-angle, 0deg),
+    var(--primary),
+    var(--accent),
+    #10b981,
+    var(--primary)
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+.gradient-border-animated:hover::before,
+.gradient-border-animated:focus-within::before {
+  opacity: 1;
+  animation: gradientBorderRotate 3s linear infinite;
+}
+
+/* Focus glow for inputs */
+.input-focus-glow:focus {
+  box-shadow:
+    0 0 0 3px rgba(245, 158, 11, 0.1),
+    0 0 20px -5px rgba(245, 158, 11, 0.15);
+}
+
+/* Smooth page transitions */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.page-enter {
+  animation: pageEnter 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Stagger children animation */
+.stagger-children > * {
+  opacity: 0;
+  animation: fadeInUp 500ms ease-out forwards;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 180ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 300ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 360ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 420ms; }
+
+/* Magnetic hover effect */
+.magnetic-hover {
+  transition: transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.magnetic-hover:hover {
+  transform: scale(1.05);
+}
+
+/* Glow pulse for active items */
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(245, 158, 11, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.4), 0 0 40px rgba(245, 158, 11, 0.1);
+  }
+}
+
+.glow-pulse {
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+/* Number count up effect */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.count-up {
+  animation: countUp 600ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Smooth scrollbar */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Active button press */
+.btn-press:active {
+  transform: scale(0.96);
+  transition: transform 100ms ease;
+}
+
+/* Floating label effect */
+.float-label {
+  transition: all 300ms ease;
+}
+
+/* Badge bounce */
+@keyframes badgeBounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.badge-bounce:hover {
+  animation: badgeBounce 0.3s ease;
+}
+
+/* Smooth color transitions for dark mode */
+* {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}
+
+/* Override for elements that need instant transitions */
+.no-transition {
+  transition: none !important;
+}
