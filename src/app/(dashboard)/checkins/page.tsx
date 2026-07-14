@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   QrCode,
   LogIn,
@@ -9,6 +9,8 @@ import {
   CheckCircle,
   XCircle,
   Search,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,198 +23,156 @@ import { formatTime } from "@/lib/utils";
 
 interface TodayCheckIn {
   id: string;
-  memberId: string;
-  memberName: string;
-  checkInTime: string;
-  checkOutTime: string | null;
-  status: "checked-in" | "checked-out";
+  member_id: string;
+  member?: { first_name: string; last_name: string } | null;
+  check_in_time: string;
+  check_out_time: string | null;
 }
-
-const demoCheckIns: TodayCheckIn[] = [
-  {
-    id: "1",
-    memberId: "1",
-    memberName: "Marcus Johnson",
-    checkInTime: "2024-01-15T09:45:00",
-    checkOutTime: null,
-    status: "checked-in",
-  },
-  {
-    id: "2",
-    memberId: "2",
-    memberName: "Sarah Williams",
-    checkInTime: "2024-01-15T09:30:00",
-    checkOutTime: null,
-    status: "checked-in",
-  },
-  {
-    id: "3",
-    memberId: "3",
-    memberName: "David Chen",
-    checkInTime: "2024-01-15T09:15:00",
-    checkOutTime: "2024-01-15T10:30:00",
-    status: "checked-out",
-  },
-  {
-    id: "4",
-    memberId: "4",
-    memberName: "Emma Rodriguez",
-    checkInTime: "2024-01-15T08:50:00",
-    checkOutTime: null,
-    status: "checked-in",
-  },
-  {
-    id: "5",
-    memberId: "5",
-    memberName: "James Wilson",
-    checkInTime: "2024-01-15T08:30:00",
-    checkOutTime: "2024-01-15T09:45:00",
-    status: "checked-out",
-  },
-];
 
 export default function CheckInsPage() {
   const [memberId, setMemberId] = useState("");
-  const [checkIns, setCheckIns] = useState<TodayCheckIn[]>(demoCheckIns);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
+  const [checkIns, setCheckIns] = useState<TodayCheckIn[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState(false);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const todayCheckedIn = checkIns.filter((c) => c.status === "checked-in").length;
-  const todayCheckedOut = checkIns.filter((c) => c.status === "checked-out").length;
-
-  const handleCheckIn = () => {
-    if (!memberId.trim()) {
-      setMessage({ type: "error", text: "Please enter a member ID" });
-      return;
-    }
-
-    const alreadyCheckedIn = checkIns.some(
-      (c) => c.memberId === memberId && c.status === "checked-in"
-    );
-
-    if (alreadyCheckedIn) {
-      setMessage({ type: "error", text: "Member is already checked in today" });
-      return;
-    }
-
-    const newCheckIn: TodayCheckIn = {
-      id: String(checkIns.length + 1),
-      memberId: memberId,
-      memberName: `Member ${memberId}`,
-      checkInTime: new Date().toISOString(),
-      checkOutTime: null,
-      status: "checked-in",
-    };
-
-    setCheckIns([newCheckIn, ...checkIns]);
-    setMessage({ type: "success", text: `Member ${memberId} checked in successfully!` });
-    setMemberId("");
+  const getMemberName = (c: TodayCheckIn) => {
+    if (c.member) return `${c.member.first_name} ${c.member.last_name}`;
+    return `Member #${c.member_id?.slice(0, 8) || "???"}`;
   };
 
-  const handleCheckOut = () => {
+  const fetchCheckIns = useCallback(async () => {
+    try {
+      const res = await fetch("/api/checkins");
+      if (res.ok) {
+        const data = await res.json();
+        setCheckIns(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch check-ins:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCheckIns().finally(() => setLoading(false));
+  }, [fetchCheckIns]);
+
+  const todayCheckedIn = checkIns.filter((c) => !c.check_out_time).length;
+  const todayCheckedOut = checkIns.filter((c) => c.check_out_time).length;
+
+  const handleCheckIn = async () => {
     if (!memberId.trim()) {
       setMessage({ type: "error", text: "Please enter a member ID" });
       return;
     }
+    setProcessing(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/checkins", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ member_id: memberId, action: "checkin" }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage({ type: "success", text: "Member checked in successfully!" });
+        setMemberId("");
+        fetchCheckIns();
+      } else {
+        setMessage({ type: "error", text: data.error || "Failed to check in" });
+      }
+    } catch {
+      setMessage({ type: "error", text: "Network error. Please try again." });
+    } finally {
+      setProcessing(false);
+    }
+  };
 
-    const checkedIn = checkIns.find(
-      (c) => c.memberId === memberId && c.status === "checked-in"
-    );
-
-    if (!checkedIn) {
-      setMessage({ type: "error", text: "No active check-in found for this member" });
+  const handleCheckOut = async () => {
+    if (!memberId.trim()) {
+      setMessage({ type: "error", text: "Please enter a member ID" });
       return;
     }
-
-    setCheckIns(
-      checkIns.map((c) =>
-        c.id === checkedIn.id
-          ? { ...c, checkOutTime: new Date().toISOString(), status: "checked-out" }
-          : c
-      )
-    );
-    setMessage({ type: "success", text: `Member ${memberId} checked out successfully!` });
-    setMemberId("");
+    setProcessing(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/checkins", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ member_id: memberId, action: "checkout" }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage({ type: "success", text: "Member checked out successfully!" });
+        setMemberId("");
+        fetchCheckIns();
+      } else {
+        setMessage({ type: "error", text: data.error || "Failed to check out" });
+      }
+    } catch {
+      setMessage({ type: "error", text: "Network error. Please try again." });
+    } finally {
+      setProcessing(false);
+    }
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6 bg-luxury min-h-full">
       {/* Header */}
-      <div>
+      <div className="animate-fade-in-down">
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-3">
-          <QrCode className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/30">
+            <QrCode className="h-5 w-5" />
+          </div>
           Check-In / Check-Out
+          <Sparkles className="h-5 w-5 text-amber-500 animate-float" />
         </h1>
-        <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+        <p className="text-muted-foreground mt-1 text-sm sm:text-base ml-[52px]">
           Manage member check-ins and check-outs for today.
         </p>
       </div>
 
       {/* Stats */}
       <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-3">
-        <StatsCard
-          title="Checked In Now"
-          value={todayCheckedIn}
-          description="Currently in gym"
-          icon={LogIn}
-        />
-        <StatsCard
-          title="Checked Out"
-          value={todayCheckedOut}
-          description="Left today"
-          icon={LogOut}
-        />
-        <StatsCard
-          title="Total Today"
-          value={checkIns.length}
-          description="All check-ins"
-          icon={Clock}
-        />
+        <StatsCard title="Checked In Now" value={todayCheckedIn} description="Currently in gym" icon={LogIn} index={0} />
+        <StatsCard title="Checked Out" value={todayCheckedOut} description="Left today" icon={LogOut} index={1} />
+        <StatsCard title="Total Today" value={checkIns.length} description="All check-ins" icon={Clock} index={2} />
       </div>
 
       {/* Check-In/Out Form */}
-      <Card>
+      <Card className="animate-fade-in-up animate-delay-200">
         <CardHeader>
-          <CardTitle>Quick Check-In / Check-Out</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-green-500 text-white shadow-md shadow-emerald-500/30">
+              <LogIn className="h-4 w-4" />
+            </div>
+            Quick Check-In / Check-Out
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3 sm:gap-4">
-            <div className="flex-1 space-y-2">
+            <div className="flex-1 space-y-2 group">
               <Label htmlFor="memberId">Member ID</Label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-amber-500" />
                 <Input
                   id="memberId"
                   placeholder="Enter member ID..."
                   value={memberId}
-                  onChange={(e) => {
-                    setMemberId(e.target.value);
-                    setMessage(null);
-                  }}
-                  className="pl-10 text-base sm:text-lg h-12 sm:h-14"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleCheckIn();
-                  }}
+                  onChange={(e) => { setMemberId(e.target.value); setMessage(null); }}
+                  className="pl-10 text-base sm:text-lg h-12 sm:h-14 bg-muted/50 border-border/50 focus:bg-card focus:border-amber-500/50 focus:shadow-md focus:shadow-amber-500/10 transition-all duration-300"
+                  onKeyDown={(e) => { if (e.key === "Enter") handleCheckIn(); }}
+                  disabled={processing}
                 />
               </div>
             </div>
             <div className="flex gap-3">
-              <Button
-                onClick={handleCheckIn}
-                variant="success"
-                className="flex-1 sm:flex-none bg-gradient-to-r from-emerald-500 to-green-600"
-              >
-                <LogIn className="h-5 w-5" />
+              <Button onClick={handleCheckIn} variant="success" className="flex-1 sm:flex-none" disabled={processing}>
+                {processing ? <Loader2 className="h-5 w-5 animate-spin" /> : <LogIn className="h-5 w-5" />}
                 Check In
               </Button>
-              <Button
-                onClick={handleCheckOut}
-                variant="destructive"
-                className="flex-1 sm:flex-none bg-gradient-to-r from-red-500 to-rose-600"
-              >
-                <LogOut className="h-5 w-5" />
+              <Button onClick={handleCheckOut} variant="destructive" className="flex-1 sm:flex-none" disabled={processing}>
+                {processing ? <Loader2 className="h-5 w-5 animate-spin" /> : <LogOut className="h-5 w-5" />}
                 Check Out
               </Button>
             </div>
@@ -220,18 +180,8 @@ export default function CheckInsPage() {
 
           {/* Message */}
           {message && (
-            <div
-              className={`mt-4 flex items-center gap-2 rounded-xl p-3 ${
-                message.type === "success"
-                  ? "bg-success/10 text-success"
-                  : "bg-danger/10 text-danger"
-              }`}
-            >
-              {message.type === "success" ? (
-                <CheckCircle className="h-5 w-5" />
-              ) : (
-                <XCircle className="h-5 w-5" />
-              )}
+            <div className={`mt-4 flex items-center gap-2 rounded-xl p-3 animate-pop-in ${message.type === "success" ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20" : "bg-red-500/10 text-red-600 border border-red-500/20"}`}>
+              {message.type === "success" ? <CheckCircle className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
               <span className="font-medium">{message.text}</span>
             </div>
           )}
@@ -239,58 +189,63 @@ export default function CheckInsPage() {
       </Card>
 
       {/* Today's Log */}
-      <Card>
+      <Card className="animate-fade-in-up animate-delay-300">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Today&apos;s Check-In Log</span>
+            <span className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-md shadow-purple-500/30">
+                <Clock className="h-4 w-4" />
+              </div>
+              Today&apos;s Check-In Log
+            </span>
             <Badge variant="secondary">{checkIns.length} records</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {checkIns.map((checkin) => (
-              <div
-                key={checkin.id}
-                className="flex items-center justify-between rounded-xl border border-border p-4 hover:bg-muted/50 transition-all"
-              >
-                <div className="flex items-center gap-4">
-                  <Avatar alt={checkin.memberName} size="md" />
-                  <div>
-                    <p className="font-semibold">{checkin.memberName}</p>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      Check-in: {formatTime(checkin.checkInTime)}
-                    </p>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
+            </div>
+          ) : checkIns.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground animate-fade-in">No check-ins today yet.</div>
+          ) : (
+            <div className="space-y-3">
+              {checkIns.map((checkin, index) => (
+                <div
+                  key={checkin.id}
+                  className="flex items-center justify-between rounded-xl border border-border/50 p-4 hover:bg-muted/30 transition-all duration-300 hover:shadow-md hover:border-amber-500/20 animate-fade-in-up group"
+                  style={{ animationDelay: `${index * 80}ms` }}
+                >
+                  <div className="flex items-center gap-4">
+                    <Avatar alt={getMemberName(checkin)} size="md" />
+                    <div>
+                      <p className="font-semibold group-hover:text-amber-600 transition-colors">{getMemberName(checkin)}</p>
+                      <p className="text-sm text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        Check-in: {formatTime(checkin.check_in_time)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    {checkin.check_out_time && (
+                      <p className="text-sm text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        Out: {formatTime(checkin.check_out_time)}
+                      </p>
+                    )}
+                    <Badge variant={!checkin.check_out_time ? "success" : "secondary"} className="text-sm">
+                      {!checkin.check_out_time ? (
+                        <><LogIn className="h-3 w-3 mr-1" /> In Gym</>
+                      ) : (
+                        <><LogOut className="h-3 w-3 mr-1" /> Left</>
+                      )}
+                    </Badge>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-3">
-                  {checkin.checkOutTime && (
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      Check-out: {formatTime(checkin.checkOutTime)}
-                    </p>
-                  )}
-                  <Badge
-                    variant={
-                      checkin.status === "checked-in" ? "success" : "secondary"
-                    }
-                    className="text-sm"
-                  >
-                    {checkin.status === "checked-in" ? (
-                      <>
-                        <LogIn className="h-3 w-3 mr-1" /> In Gym
-                      </>
-                    ) : (
-                      <>
-                        <LogOut className="h-3 w-3 mr-1" /> Left
-                      </>
-                    )}
-                  </Badge>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

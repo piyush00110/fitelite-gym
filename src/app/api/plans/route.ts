@@ -5,7 +5,6 @@ export async function GET() {
   const { data, error } = await getSupabase()
     .from("membership_plans")
     .select("*")
-    .eq("is_active", true)
     .order("price", { ascending: true });
 
   if (error) {

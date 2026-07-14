@@ -15,6 +15,23 @@ const sizeClasses = {
   xl: "h-16 w-16 text-lg",
 };
 
+const gradients = [
+  "from-amber-500 to-orange-500",
+  "from-emerald-500 to-green-500",
+  "from-purple-500 to-pink-500",
+  "from-blue-500 to-cyan-500",
+  "from-rose-500 to-red-500",
+  "from-indigo-500 to-violet-500",
+];
+
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash);
+}
+
 export function Avatar({
   src,
   alt,
@@ -33,10 +50,14 @@ export function Avatar({
           .slice(0, 2)
       : "?");
 
+  const gradientIndex = alt ? hashString(alt) % gradients.length : 0;
+  const gradient = gradients[gradientIndex];
+
   return (
     <div
       className={cn(
-        "relative flex items-center justify-center overflow-hidden rounded-full bg-primary/10 text-primary font-bold",
+        "relative flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-br text-white font-bold shadow-md transition-all duration-300 hover:scale-110 hover:shadow-lg",
+        gradient,
         sizeClasses[size],
         className
       )}
@@ -48,7 +69,7 @@ export function Avatar({
           className="h-full w-full object-cover"
         />
       ) : (
-        <span>{initials}</span>
+        <span className="drop-shadow-sm">{initials}</span>
       )}
     </div>
   );

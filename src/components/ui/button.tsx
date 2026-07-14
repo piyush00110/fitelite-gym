@@ -3,28 +3,28 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:pointer-events-none disabled:opacity-50 cursor-pointer",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:pointer-events-none disabled:opacity-50 cursor-pointer relative overflow-hidden group",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg",
+          "bg-gradient-to-r from-amber-600 to-amber-500 text-white hover:from-amber-700 hover:to-amber-600 shadow-md hover:shadow-lg hover:shadow-amber-500/25 active:scale-[0.98]",
         destructive:
-          "bg-danger text-white hover:bg-danger/90 shadow-md hover:shadow-lg",
+          "bg-gradient-to-r from-red-600 to-rose-500 text-white hover:from-red-700 hover:to-rose-600 shadow-md hover:shadow-lg hover:shadow-red-500/25 active:scale-[0.98]",
         outline:
-          "border border-border bg-card hover:bg-muted text-card-foreground",
+          "border-2 border-border bg-card/50 backdrop-blur-sm hover:bg-muted/80 text-card-foreground hover:border-primary/30 hover:shadow-md hover:shadow-primary/10 active:scale-[0.98]",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-muted text-muted-foreground hover:text-foreground",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm hover:shadow-md active:scale-[0.98]",
+        ghost: "hover:bg-muted/80 text-muted-foreground hover:text-foreground hover:shadow-sm active:scale-[0.98]",
         link: "text-primary underline-offset-4 hover:underline",
         success:
-          "bg-success text-white hover:bg-success/90 shadow-md hover:shadow-lg",
+          "bg-gradient-to-r from-emerald-600 to-green-500 text-white hover:from-emerald-700 hover:to-green-600 shadow-md hover:shadow-lg hover:shadow-emerald-500/25 active:scale-[0.98]",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-12 rounded-lg px-8 text-base",
-        xl: "h-14 rounded-xl px-10 text-lg",
+        default: "h-10 px-5 py-2",
+        sm: "h-8 rounded-lg px-3 text-xs",
+        lg: "h-12 rounded-xl px-8 text-base",
+        xl: "h-14 rounded-2xl px-10 text-lg",
         icon: "h-10 w-10",
       },
     },

@@ -7,6 +7,7 @@ import {
   UserPlus,
   Activity,
   Calendar,
+  Sparkles,
 } from "lucide-react";
 import { StatsCard } from "@/components/stats-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +15,6 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/avatar";
 import { formatCurrency } from "@/lib/utils";
 
-// Demo data for luxury preview
 const demoStats = {
   totalMembers: 247,
   activeMembers: 218,
@@ -41,11 +41,12 @@ const upcomingExpirations = [
 
 export default function DashboardPage() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 bg-luxury min-h-full">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-          Welcome back, <span className="gradient-text">Admin</span>
+      <div className="animate-fade-in-down">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-3">
+          Welcome back, <span className="gradient-text-gold">Admin</span>
+          <Sparkles className="h-6 w-6 text-amber-500 animate-float" />
         </h1>
         <p className="text-muted-foreground mt-1">
           Here&apos;s what&apos;s happening at your gym today.
@@ -61,6 +62,7 @@ export default function DashboardPage() {
           icon={Users}
           trend="up"
           trendValue={demoStats.membersTrend}
+          index={0}
         />
         <StatsCard
           title="Today's Check-Ins"
@@ -69,6 +71,7 @@ export default function DashboardPage() {
           icon={QrCode}
           trend="up"
           trendValue={demoStats.checkInsTrend}
+          index={1}
         />
         <StatsCard
           title="Monthly Revenue"
@@ -77,36 +80,41 @@ export default function DashboardPage() {
           icon={TrendingUp}
           trend="up"
           trendValue={demoStats.revenueTrend}
+          index={2}
         />
         <StatsCard
           title="Active Plans"
           value={3}
           description="Membership tiers"
           icon={CreditCard}
+          index={3}
         />
       </div>
 
       {/* Content Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Recent Check-Ins */}
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2 animate-fade-in-up animate-delay-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-primary" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-md shadow-amber-500/30">
+                <Activity className="h-4 w-4" />
+              </div>
               Recent Check-Ins
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {recentCheckIns.map((checkin) => (
+            <div className="space-y-3">
+              {recentCheckIns.map((checkin, index) => (
                 <div
                   key={checkin.id}
-                  className="flex items-center justify-between rounded-xl border border-border p-3 hover:bg-muted/50 transition-colors"
+                  className="flex items-center justify-between rounded-xl border border-border/50 p-3 hover:bg-muted/50 transition-all duration-300 hover:shadow-md hover:border-amber-500/20 animate-fade-in-up group"
+                  style={{ animationDelay: `${300 + index * 100}ms` }}
                 >
                   <div className="flex items-center gap-3">
                     <Avatar alt={checkin.name} size="md" />
                     <div>
-                      <p className="font-semibold text-sm">{checkin.name}</p>
+                      <p className="font-semibold text-sm group-hover:text-amber-600 transition-colors">{checkin.name}</p>
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {checkin.time}
@@ -127,24 +135,27 @@ export default function DashboardPage() {
         </Card>
 
         {/* Upcoming Expirations */}
-        <Card>
+        <Card className="animate-fade-in-up animate-delay-400">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-warning" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/30">
+                <Calendar className="h-4 w-4" />
+              </div>
               Expiring Soon
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {upcomingExpirations.map((item, i) => (
+            <div className="space-y-3">
+              {upcomingExpirations.map((item, index) => (
                 <div
-                  key={i}
-                  className="rounded-xl border border-border p-3 hover:bg-muted/50 transition-colors"
+                  key={index}
+                  className="rounded-xl border border-border/50 p-3 hover:bg-muted/50 transition-all duration-300 hover:shadow-md hover:border-orange-500/20 animate-fade-in-up group"
+                  style={{ animationDelay: `${500 + index * 100}ms` }}
                 >
-                  <p className="font-semibold text-sm">{item.name}</p>
-                  <div className="flex items-center justify-between mt-1">
+                  <p className="font-semibold text-sm group-hover:text-orange-600 transition-colors">{item.name}</p>
+                  <div className="flex items-center justify-between mt-1.5">
                     <Badge variant="outline">{item.plan}</Badge>
-                    <span className="text-xs text-warning font-medium">
+                    <span className="text-xs text-orange-500 font-semibold px-2 py-0.5 rounded-full bg-orange-500/10">
                       {item.expires}
                     </span>
                   </div>
@@ -156,63 +167,38 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <Card>
+      <Card className="animate-fade-in-up animate-delay-600">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <UserPlus className="h-5 w-5 text-primary" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-md shadow-purple-500/30">
+              <UserPlus className="h-4 w-4" />
+            </div>
             Quick Actions
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            <a
-              href="/members"
-              className="flex items-center gap-3 rounded-xl border border-border p-4 hover:bg-primary/5 hover:border-primary/30 transition-all group"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                <UserPlus className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="font-semibold text-sm">Add Member</p>
-                <p className="text-xs text-muted-foreground">Register new</p>
-              </div>
-            </a>
-            <a
-              href="/checkins"
-              className="flex items-center gap-3 rounded-xl border border-border p-4 hover:bg-success/5 hover:border-success/30 transition-all group"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10 group-hover:bg-success/20 transition-colors">
-                <QrCode className="h-5 w-5 text-success" />
-              </div>
-              <div>
-                <p className="font-semibold text-sm">Check-In</p>
-                <p className="text-xs text-muted-foreground">Scan member</p>
-              </div>
-            </a>
-            <a
-              href="/plans"
-              className="flex items-center gap-3 rounded-xl border border-border p-4 hover:bg-warning/5 hover:border-warning/30 transition-all group"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/10 group-hover:bg-warning/20 transition-colors">
-                <CreditCard className="h-5 w-5 text-warning" />
-              </div>
-              <div>
-                <p className="font-semibold text-sm">View Plans</p>
-                <p className="text-xs text-muted-foreground">Manage tiers</p>
-              </div>
-            </a>
-            <a
-              href="/payments"
-              className="flex items-center gap-3 rounded-xl border border-border p-4 hover:bg-info/5 hover:border-info/30 transition-all group"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                <TrendingUp className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="font-semibold text-sm">Payments</p>
-                <p className="text-xs text-muted-foreground">View revenue</p>
-              </div>
-            </a>
+            {[
+              { href: "/members", icon: UserPlus, label: "Add Member", sub: "Register new", color: "amber", delay: 700 },
+              { href: "/checkins", icon: QrCode, label: "Check-In", sub: "Scan member", color: "emerald", delay: 800 },
+              { href: "/plans", icon: CreditCard, label: "View Plans", sub: "Manage tiers", color: "orange", delay: 900 },
+              { href: "/payments", icon: TrendingUp, label: "Payments", sub: "View revenue", color: "purple", delay: 1000 },
+            ].map((action) => (
+              <a
+                key={action.href}
+                href={action.href}
+                className="flex items-center gap-3 rounded-xl border border-border/50 p-4 hover:bg-gradient-to-br hover:from-amber-500/5 hover:to-transparent hover:border-amber-500/30 transition-all duration-300 hover:shadow-md hover:shadow-amber-500/10 hover-lift group animate-fade-in-up"
+                style={{ animationDelay: `${action.delay}ms` }}
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-600/5 group-hover:from-amber-500 group-hover:to-amber-600 group-hover:text-white group-hover:shadow-lg group-hover:shadow-amber-500/30 transition-all duration-300">
+                  <action.icon className="h-5 w-5 text-amber-600 group-hover:text-white transition-colors" />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm group-hover:text-amber-600 transition-colors">{action.label}</p>
+                  <p className="text-xs text-muted-foreground">{action.sub}</p>
+                </div>
+              </a>
+            ))}
           </div>
         </CardContent>
       </Card>

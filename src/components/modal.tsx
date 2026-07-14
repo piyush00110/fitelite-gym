@@ -49,17 +49,25 @@ export function Modal({
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm modal-overlay"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md modal-overlay"
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
     >
       <div
-        className={`w-full ${sizeClasses[size]} mx-4 rounded-2xl bg-card border border-border luxury-shadow-lg modal-content`}
+        className={`w-full ${sizeClasses[size]} mx-4 rounded-2xl bg-card/95 backdrop-blur-xl border border-border/50 luxury-shadow-xl modal-content relative overflow-hidden`}
       >
-        <div className="flex items-center justify-between border-b border-border p-6">
-          <h2 className="text-xl font-bold">{title}</h2>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+        {/* Decorative top gradient */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-500 to-transparent" />
+
+        <div className="flex items-center justify-between border-b border-border/50 p-6">
+          <h2 className="text-xl font-bold gradient-text">{title}</h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="hover:scale-110 active:scale-95 transition-transform"
+          >
             <X className="h-5 w-5" />
           </Button>
         </div>

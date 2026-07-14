@@ -29,106 +29,51 @@ export function MemberForm({ member, onSubmit, onCancel }: MemberFormProps) {
     onSubmit(formData);
   };
 
+  const inputClass = "bg-muted/50 border-border/50 backdrop-blur-sm focus:bg-card focus:border-amber-500/50 focus:shadow-md focus:shadow-amber-500/10 transition-all duration-300";
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="first_name">First Name *</Label>
-          <Input
-            id="first_name"
-            value={formData.first_name}
-            onChange={(e) =>
-              setFormData({ ...formData, first_name: e.target.value })
-            }
-            placeholder="Enter first name"
-            required
-          />
+          <Input id="first_name" value={formData.first_name} onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} placeholder="Enter first name" required className={inputClass} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="last_name">Last Name *</Label>
-          <Input
-            id="last_name"
-            value={formData.last_name}
-            onChange={(e) =>
-              setFormData({ ...formData, last_name: e.target.value })
-            }
-            placeholder="Enter last name"
-            required
-          />
+          <Input id="last_name" value={formData.last_name} onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} placeholder="Enter last name" required className={inputClass} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
-            placeholder="email@example.com"
-          />
+          <Input id="email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="email@example.com" className={inputClass} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="phone">Phone</Label>
-          <Input
-            id="phone"
-            value={formData.phone}
-            onChange={(e) =>
-              setFormData({ ...formData, phone: e.target.value })
-            }
-            placeholder="+1 (555) 000-0000"
-          />
+          <Input id="phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="+1 (555) 000-0000" className={inputClass} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="date_of_birth">Date of Birth</Label>
-          <Input
-            id="date_of_birth"
-            type="date"
-            value={formData.date_of_birth}
-            onChange={(e) =>
-              setFormData({ ...formData, date_of_birth: e.target.value })
-            }
-          />
+          <Input id="date_of_birth" type="date" value={formData.date_of_birth} onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })} className={inputClass} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="join_date">Join Date</Label>
-          <Input
-            id="join_date"
-            type="date"
-            value={formData.join_date}
-            onChange={(e) =>
-              setFormData({ ...formData, join_date: e.target.value })
-            }
-          />
+          <Input id="join_date" type="date" value={formData.join_date} onChange={(e) => setFormData({ ...formData, join_date: e.target.value })} className={inputClass} />
         </div>
       </div>
 
       <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          id="is_active"
-          checked={formData.is_active}
-          onChange={(e) =>
-            setFormData({ ...formData, is_active: e.target.checked })
-          }
-          className="h-4 w-4 rounded border-border"
-        />
+        <input type="checkbox" id="is_active" checked={formData.is_active} onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })} className="h-4 w-4 rounded border-border accent-amber-500" />
         <Label htmlFor="is_active">Active Member</Label>
       </div>
 
-      <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-border">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit" variant="success">
-          {member ? "Update Member" : "Add Member"}
-        </Button>
+      <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-border/50">
+        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+        <Button type="submit" variant="success">{member ? "Update Member" : "Add Member"}</Button>
       </div>
     </form>
   );

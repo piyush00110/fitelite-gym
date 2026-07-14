@@ -11,6 +11,7 @@ import {
   Banknote,
   Loader2,
   Trash2,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,11 +39,11 @@ const methodIcons: Record<string, React.ElementType> = {
   "Mobile Pay": CreditCard,
 };
 
-const methodColors: Record<string, string> = {
-  Cash: "bg-emerald-500/10 text-emerald-600",
-  "Credit Card": "bg-blue-500/10 text-blue-600",
-  "Bank Transfer": "bg-purple-500/10 text-purple-600",
-  "Mobile Pay": "bg-orange-500/10 text-orange-600",
+const methodGradients: Record<string, string> = {
+  Cash: "from-emerald-500 to-green-500",
+  "Credit Card": "from-blue-500 to-cyan-500",
+  "Bank Transfer": "from-purple-500 to-pink-500",
+  "Mobile Pay": "from-orange-500 to-amber-500",
 };
 
 export default function PaymentsPage() {
@@ -117,19 +118,22 @@ export default function PaymentsPage() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6 bg-luxury min-h-full">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-down">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-3">
-            <Receipt className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/30">
+              <Receipt className="h-5 w-5" />
+            </div>
             Payments
+            <Sparkles className="h-5 w-5 text-amber-500 animate-float" />
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base ml-[52px]">
             Track all payment transactions and revenue.
           </p>
         </div>
-        <Button onClick={() => setShowAddModal(true)} className="w-full sm:w-auto">
+        <Button onClick={() => setShowAddModal(true)} className="w-full sm:w-auto animate-fade-in-right">
           <Plus className="h-5 w-5" />
           Add Payment
         </Button>
@@ -144,32 +148,35 @@ export default function PaymentsPage() {
           icon={TrendingUp}
           trend="up"
           trendValue="+12%"
+          index={0}
         />
         <StatsCard
           title="Average Payment"
           value={formatCurrency(averagePayment)}
           description="Per transaction"
           icon={DollarSign}
+          index={1}
         />
         <StatsCard
           title="Total Transactions"
           value={payments.length}
           description="All payments"
           icon={Receipt}
+          index={2}
         />
       </div>
 
       {/* Search */}
-      <Card>
+      <Card className="animate-fade-in-up animate-delay-200">
         <CardContent className="p-3 sm:p-4">
           <div className="flex items-center gap-2 sm:gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <div className="relative flex-1 group">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-amber-500" />
               <Input
                 placeholder="Search by member, method, or notes..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 bg-muted/50 border-border/50 backdrop-blur-sm focus:bg-card focus:border-amber-500/50 focus:shadow-md focus:shadow-amber-500/10 transition-all duration-300"
               />
             </div>
           </div>
@@ -177,7 +184,7 @@ export default function PaymentsPage() {
       </Card>
 
       {/* Payments List */}
-      <Card>
+      <Card className="animate-fade-in-up animate-delay-300">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>All Payments</span>
@@ -187,33 +194,30 @@ export default function PaymentsPage() {
         <CardContent>
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
             </div>
           ) : filteredPayments.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
+            <div className="text-center py-12 text-muted-foreground animate-fade-in">
               {searchQuery ? "No payments match your search." : "No payments recorded yet."}
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredPayments.map((payment) => {
+              {filteredPayments.map((payment, index) => {
                 const MethodIcon = methodIcons[payment.payment_method] || CreditCard;
-                const colorClass =
-                  methodColors[payment.payment_method] ||
-                  "bg-gray-500/10 text-gray-600";
+                const gradient = methodGradients[payment.payment_method] || "from-gray-500 to-gray-600";
 
                 return (
                   <div
                     key={payment.id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between rounded-xl border border-border p-3 sm:p-4 hover:bg-muted/50 transition-all gap-3"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between rounded-xl border border-border/50 p-3 sm:p-4 hover:bg-muted/30 transition-all duration-300 hover:shadow-md hover:border-amber-500/20 gap-3 animate-fade-in-up group"
+                    style={{ animationDelay: `${index * 60}ms` }}
                   >
                     <div className="flex items-center gap-3 sm:gap-4">
-                      <div
-                        className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl ${colorClass}`}
-                      >
+                      <div className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} text-white shadow-md transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg`}>
                         <MethodIcon className="h-5 w-5 sm:h-6 sm:w-6" />
                       </div>
                       <div className="min-w-0">
-                        <p className="font-semibold text-sm sm:text-base">{getMemberName(payment)}</p>
+                        <p className="font-semibold text-sm sm:text-base group-hover:text-amber-600 transition-colors">{getMemberName(payment)}</p>
                         <p className="text-xs sm:text-sm text-muted-foreground truncate">
                           {payment.notes || "No notes"}
                         </p>
@@ -227,14 +231,14 @@ export default function PaymentsPage() {
                         </p>
                         <Badge variant="outline" className="text-xs">{payment.payment_method}</Badge>
                       </div>
-                      <p className="text-base sm:text-lg font-bold text-success min-w-[80px] sm:min-w-[100px] text-right">
+                      <p className="text-base sm:text-lg font-bold text-emerald-600 min-w-[80px] sm:min-w-[100px] text-right">
                         +{formatCurrency(payment.amount)}
                       </p>
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => setShowDeleteConfirm(payment.id)}
-                        className="text-destructive hover:text-destructive h-8 w-8"
+                        className="text-destructive hover:text-destructive h-8 w-8 hover:scale-110 active:scale-95 transition-all hover:bg-red-500/10"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

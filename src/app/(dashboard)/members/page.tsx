@@ -7,12 +7,11 @@ import {
   Plus,
   Edit,
   Trash2,
-  Filter,
   Mail,
   Phone,
   Calendar,
-  ArrowUpDown,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,8 +61,6 @@ export default function MembersPage() {
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery, fetchMembers]);
-
-  const filteredMembers = searchQuery ? members : members;
 
   const activeCount = members.filter((m) => m.is_active).length;
 
@@ -115,38 +112,41 @@ export default function MembersPage() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6 bg-luxury min-h-full">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-down">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-3">
-            <Users className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/30">
+              <Users className="h-5 w-5" />
+            </div>
             Members
+            <Sparkles className="h-5 w-5 text-amber-500 animate-float" />
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base ml-[52px]">
             Manage your gym members and their information.
           </p>
         </div>
-        <Button onClick={() => setShowAddModal(true)} className="w-full sm:w-auto">
+        <Button onClick={() => setShowAddModal(true)} className="w-full sm:w-auto animate-fade-in-right">
           <Plus className="h-5 w-5" />
           Add Member
         </Button>
       </div>
 
       {/* Search */}
-      <Card>
+      <Card className="animate-fade-in-up animate-delay-100">
         <CardContent className="p-3 sm:p-4">
           <div className="flex items-center gap-2 sm:gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <div className="relative flex-1 group">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-amber-500" />
               <Input
                 placeholder="Search by name, email, or phone..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 bg-muted/50 border-border/50 backdrop-blur-sm focus:bg-card focus:border-amber-500/50 focus:shadow-md focus:shadow-amber-500/10 transition-all duration-300"
               />
               {(loading || searching) && (
-                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground animate-spin" />
+                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-amber-500 animate-spin" />
               )}
             </div>
           </div>
@@ -154,10 +154,10 @@ export default function MembersPage() {
       </Card>
 
       {/* Members List */}
-      <Card>
+      <Card className="animate-fade-in-up animate-delay-200">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center justify-between text-base sm:text-xl">
-            <span>All Members ({filteredMembers.length})</span>
+            <span>All Members ({members.length})</span>
             <Badge variant="secondary">
               {activeCount} Active
             </Badge>
@@ -166,24 +166,25 @@ export default function MembersPage() {
         <CardContent>
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
             </div>
-          ) : filteredMembers.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
+          ) : members.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground animate-fade-in">
               {searchQuery ? "No members match your search." : "No members yet. Add your first member!"}
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredMembers.map((member) => (
+              {members.map((member, index) => (
                 <div
                   key={member.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between rounded-xl border border-border p-3 sm:p-4 hover:bg-muted/50 transition-all gap-3"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between rounded-xl border border-border/50 p-3 sm:p-4 hover:bg-muted/30 transition-all duration-300 hover:shadow-md hover:border-amber-500/20 gap-3 animate-fade-in-up group"
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className="flex items-center gap-3 sm:gap-4">
                     <Avatar alt={`${member.first_name} ${member.last_name}`} size="md" />
                     <div className="space-y-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-semibold text-sm sm:text-base">
+                        <p className="font-semibold text-sm sm:text-base group-hover:text-amber-600 transition-colors">
                           {member.first_name} {member.last_name}
                         </p>
                         <Badge variant={member.is_active ? "success" : "secondary"} className="text-xs">
@@ -208,10 +209,10 @@ export default function MembersPage() {
                   </div>
 
                   <div className="flex items-center gap-2 sm:flex-shrink-0 pl-10 sm:pl-0">
-                    <Button variant="ghost" size="icon" onClick={() => setEditingMember(member)}>
+                    <Button variant="ghost" size="icon" onClick={() => setEditingMember(member)} className="hover:scale-110 active:scale-95 transition-transform hover:bg-amber-500/10 hover:text-amber-600">
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => setShowDeleteConfirm(member.id)} className="text-danger hover:text-danger">
+                    <Button variant="ghost" size="icon" onClick={() => setShowDeleteConfirm(member.id)} className="text-destructive hover:text-destructive hover:scale-110 active:scale-95 transition-all hover:bg-red-500/10">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
