@@ -1,12 +1,22 @@
 "use client";
 
-import { Bell, Search, Menu } from "lucide-react";
+import { Bell, Search, Menu, Sun, Moon, Monitor } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLayout } from "@/components/layout-provider";
+import { useTheme } from "@/components/theme-provider";
 
 export function Navbar() {
   const { isMobile, openMobile } = useLayout();
+  const { theme, setTheme } = useTheme();
+
+  const cycleTheme = () => {
+    if (theme === "light") setTheme("dark");
+    else if (theme === "dark") setTheme("system");
+    else setTheme("light");
+  };
+
+  const ThemeIcon = theme === "light" ? Sun : theme === "dark" ? Moon : Monitor;
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border/50 bg-card/70 backdrop-blur-xl px-4 md:px-6">
@@ -30,6 +40,16 @@ export function Navbar() {
       </div>
 
       <div className="flex items-center gap-2 md:gap-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={cycleTheme}
+          className="hover:scale-110 active:scale-95 transition-all group"
+          title={`Theme: ${theme}`}
+        >
+          <ThemeIcon className="h-5 w-5 transition-transform group-hover:rotate-12" />
+        </Button>
+
         <Button variant="ghost" size="icon" className="relative hover:scale-110 active:scale-95 transition-transform group">
           <Bell className="h-5 w-5 transition-transform group-hover:rotate-12" />
           <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-gradient-to-r from-red-500 to-rose-500 animate-glow" />

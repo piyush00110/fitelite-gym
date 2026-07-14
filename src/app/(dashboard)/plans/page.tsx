@@ -17,12 +17,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/modal";
 import { formatCurrency } from "@/lib/utils";
 import type { MembershipPlan } from "@/types/database";
+import type { Member } from "@/types/database";
 
 const planIcons = [Zap, Star, Crown];
 const planGradients = [
@@ -40,6 +42,7 @@ export default function PlansPage() {
   const [assignMemberId, setAssignMemberId] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [members, setMembers] = useState<Member[]>([]);
 
   const fetchPlans = useCallback(async () => {
     try {
@@ -55,6 +58,7 @@ export default function PlansPage() {
 
   useEffect(() => {
     fetchPlans().finally(() => setLoading(false));
+    fetch("/api/members").then((r) => r.json()).then((data) => setMembers(data)).catch(console.error);
   }, [fetchPlans]);
 
   const handleAdd = async (data: Partial<MembershipPlan>) => {
@@ -246,12 +250,24 @@ export default function PlansPage() {
       <Modal isOpen={!!showAssignModal} onClose={() => { setShowAssignModal(null); setAssignMemberId(""); }} title={`Assign ${showAssignModal?.name} Plan`} size="sm">
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="assignMemberId">Member ID</Label>
-            <Input id="assignMemberId" placeholder="Enter member ID" value={assignMemberId} onChange={(e) => setAssignMemberId(e.target.value)} className="bg-muted/50 border-border/50 focus:bg-card focus:border-amber-500/50 transition-all duration-300" />
+            <Label htmlFor="assignMemberId">Select Member</Label>
+            <Select id="assignMemberId" value={assignMemberId} onChange={(e) => setAssignMemberId(e.target.value)} className="bg-muted/50 border-border/50 focus:bg-card focus:border-amber-500/50 transition-all duration-300">
+              <option value="">Choose a member...</option>
+              {members.map((m) => (
+                <option key={m.id} value={m.id}>{m.first_name} {m.last_name}</option>
+              ))}
+            </Select>
           </div>
+          {showAssignModal && (
+            <div className="rounded-xl bg-muted/50 p-3 text-sm space-y-1">
+              <p className="text-muted-foreground">Plan: <span className="font-semibold text-foreground">{showAssignModal.name}</span></p>
+              <p className="text-muted-foreground">Duration: <span className="font-semibold text-foreground">{showAssignModal.duration_days} days</span></p>
+              <p className="text-muted-foreground">Price: <span className="font-semibold text-emerald-600">{formatCurrency(showAssignModal.price)}</span></p>
+            </div>
+          )}
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
             <Button variant="outline" onClick={() => { setShowAssignModal(null); setAssignMemberId(""); }}>Cancel</Button>
-            <Button onClick={handleAssign}>Assign Plan</Button>
+            <Button onClick={handleAssign} disabled={!assignMemberId.trim()}>Assign Plan</Button>
           </div>
         </div>
       </Modal>

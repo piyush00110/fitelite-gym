@@ -40,25 +40,23 @@
   --danger: #dc2626;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0c0a09;
-    --foreground: #fafaf9;
-    --primary: #f59e0b;
-    --primary-foreground: #1c1917;
-    --secondary: #a8a29e;
-    --secondary-foreground: #1c1917;
-    --accent: #fbbf24;
-    --accent-foreground: #1c1917;
-    --muted: #1c1917;
-    --muted-foreground: #a8a29e;
-    --card: #1c1917;
-    --card-foreground: #fafaf9;
-    --border: #292524;
-    --success: #22c55e;
-    --warning: #f97316;
-    --danger: #ef4444;
-  }
+.dark {
+  --background: #0c0a09;
+  --foreground: #fafaf9;
+  --primary: #f59e0b;
+  --primary-foreground: #1c1917;
+  --secondary: #a8a29e;
+  --secondary-foreground: #1c1917;
+  --accent: #fbbf24;
+  --accent-foreground: #1c1917;
+  --muted: #1c1917;
+  --muted-foreground: #a8a29e;
+  --card: #1c1917;
+  --card-foreground: #fafaf9;
+  --border: #292524;
+  --success: #22c55e;
+  --warning: #f97316;
+  --danger: #ef4444;
 }
 
 body {
@@ -95,11 +93,9 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-@media (prefers-color-scheme: dark) {
-  .glass {
-    background: rgba(28, 25, 23, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-  }
+.dark .glass {
+  background: rgba(28, 25, 23, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .glass-strong {
@@ -109,11 +105,9 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
-@media (prefers-color-scheme: dark) {
-  .glass-strong {
-    background: rgba(28, 25, 23, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-  }
+.dark .glass-strong {
+  background: rgba(28, 25, 23, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 /* ============================================
@@ -504,12 +498,10 @@ body {
     var(--background);
 }
 
-@media (prefers-color-scheme: dark) {
-  .bg-luxury {
-    background:
-      radial-gradient(ellipse at 20% 50%, rgba(245, 158, 11, 0.08) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 20%, rgba(217, 119, 6, 0.06) 0%, transparent 50%),
-      radial-gradient(ellipse at 40% 80%, rgba(180, 83, 9, 0.04) 0%, transparent 50%),
-      var(--background);
-  }
+.dark .bg-luxury {
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(245, 158, 11, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(217, 119, 6, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 40% 80%, rgba(180, 83, 9, 0.04) 0%, transparent 50%),
+    var(--background);
 }
