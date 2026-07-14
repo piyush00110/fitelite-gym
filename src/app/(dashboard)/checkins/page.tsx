@@ -15,11 +15,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/avatar";
 import { StatsCard } from "@/components/stats-card";
 import { formatTime } from "@/lib/utils";
+import type { Member } from "@/types/database";
 
 interface TodayCheckIn {
   id: string;
@@ -32,6 +34,7 @@ interface TodayCheckIn {
 export default function CheckInsPage() {
   const [memberId, setMemberId] = useState("");
   const [checkIns, setCheckIns] = useState<TodayCheckIn[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -54,7 +57,10 @@ export default function CheckInsPage() {
   }, []);
 
   useEffect(() => {
-    fetchCheckIns().finally(() => setLoading(false));
+    Promise.all([
+      fetchCheckIns(),
+      fetch("/api/members").then((r) => r.json()).then((data) => setMembers(data)).catch(console.error),
+    ]).finally(() => setLoading(false));
   }, [fetchCheckIns]);
 
   const todayCheckedIn = checkIns.filter((c) => !c.check_out_time).length;
@@ -127,7 +133,7 @@ export default function CheckInsPage() {
           Check-In / Check-Out
           <Sparkles className="h-5 w-5 text-amber-500 animate-float" />
         </h1>
-        <p className="text-muted-foreground mt-1 text-sm sm:text-base ml-[52px]">
+        <p className="text-muted-foreground mt-1 text-sm sm:text-base sm:ml-[52px]">
           Manage member check-ins and check-outs for today.
         </p>
       </div>
@@ -151,20 +157,19 @@ export default function CheckInsPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3 sm:gap-4">
-            <div className="flex-1 space-y-2 group">
-              <Label htmlFor="memberId">Member ID</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-amber-500" />
-                <Input
-                  id="memberId"
-                  placeholder="Enter member ID..."
-                  value={memberId}
-                  onChange={(e) => { setMemberId(e.target.value); setMessage(null); }}
-                  className="pl-10 text-base sm:text-lg h-12 sm:h-14 bg-muted/50 border-border/50 focus:bg-card focus:border-amber-500/50 focus:shadow-md focus:shadow-amber-500/10 transition-all duration-300"
-                  onKeyDown={(e) => { if (e.key === "Enter") handleCheckIn(); }}
-                  disabled={processing}
-                />
-              </div>
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="memberId">Select Member</Label>
+              <Select
+                value={memberId}
+                onChange={(e) => { setMemberId(e.target.value); setMessage(null); }}
+                disabled={processing}
+                className="text-base sm:text-lg h-12 sm:h-14 bg-muted/50 border-border/50 focus:bg-card focus:border-amber-500/50 focus:shadow-md focus:shadow-amber-500/10 transition-all duration-300"
+              >
+                <option value="">Select a member...</option>
+                {members.map((m) => (
+                  <option key={m.id} value={m.id}>{m.first_name} {m.last_name}</option>
+                ))}
+              </Select>
             </div>
             <div className="flex gap-3">
               <Button onClick={handleCheckIn} variant="success" className="flex-1 sm:flex-none" disabled={processing}>

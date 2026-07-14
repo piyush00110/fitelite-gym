@@ -123,7 +123,7 @@ export default function MembersPage() {
             Members
             <Sparkles className="h-5 w-5 text-amber-500 animate-float" />
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base ml-[52px]">
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base sm:ml-[52px]">
             Manage your gym members and their information.
           </p>
         </div>

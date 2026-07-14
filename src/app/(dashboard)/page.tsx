@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Users,
   CreditCard,
@@ -181,7 +182,7 @@ export default function DashboardPage() {
               { href: "/plans", icon: CreditCard, label: "View Plans", sub: "Manage tiers", delay: 900 },
               { href: "/payments", icon: TrendingUp, label: "Payments", sub: "View revenue", delay: 1000 },
             ].map((action) => (
-              <a key={action.href} href={action.href} className="flex items-center gap-3 rounded-xl border border-border/50 p-4 hover:bg-gradient-to-br hover:from-amber-500/5 hover:to-transparent hover:border-amber-500/30 transition-all duration-300 hover:shadow-md hover:shadow-amber-500/10 hover-lift group animate-fade-in-up" style={{ animationDelay: `${action.delay}ms` }}>
+              <Link key={action.href} href={action.href} className="flex items-center gap-3 rounded-xl border border-border/50 p-4 hover:bg-gradient-to-br hover:from-amber-500/5 hover:to-transparent hover:border-amber-500/30 transition-all duration-300 hover:shadow-md hover:shadow-amber-500/10 hover-lift group animate-fade-in-up" style={{ animationDelay: `${action.delay}ms` }}>
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-600/5 group-hover:from-amber-500 group-hover:to-amber-600 group-hover:text-white group-hover:shadow-lg group-hover:shadow-amber-500/30 transition-all duration-300">
                   <action.icon className="h-5 w-5 text-amber-600 group-hover:text-white transition-colors" />
                 </div>
@@ -189,7 +190,7 @@ export default function DashboardPage() {
                   <p className="font-semibold text-sm group-hover:text-amber-600 transition-colors">{action.label}</p>
                   <p className="text-xs text-muted-foreground">{action.sub}</p>
                 </div>
-              </a>
+              </Link>
             ))}
           </div>
         </CardContent>

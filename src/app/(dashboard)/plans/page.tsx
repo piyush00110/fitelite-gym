@@ -39,6 +39,7 @@ export default function PlansPage() {
   const [showAssignModal, setShowAssignModal] = useState<MembershipPlan | null>(null);
   const [assignMemberId, setAssignMemberId] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const fetchPlans = useCallback(async () => {
     try {
@@ -103,29 +104,27 @@ export default function PlansPage() {
 
   const handleAssign = async () => {
     if (!showAssignModal || !assignMemberId.trim()) return;
+    setMessage(null);
     try {
-      const startDate = new Date().toISOString().split("T")[0];
-      const endDate = new Date(Date.now() + showAssignModal.duration_days * 86400000).toISOString().split("T")[0];
       const res = await fetch("/api/plans/assign", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           member_id: assignMemberId,
           plan_id: showAssignModal.id,
-          start_date: startDate,
-          end_date: endDate,
         }),
       });
       if (res.ok) {
-        alert(`Plan assigned successfully!`);
+        setMessage({ type: "success", text: "Plan assigned successfully!" });
         setShowAssignModal(null);
         setAssignMemberId("");
+        fetchPlans();
       } else {
         const data = await res.json();
-        alert(data.error || "Failed to assign plan");
+        setMessage({ type: "error", text: data.error || "Failed to assign plan" });
       }
     } catch {
-      alert("Network error");
+      setMessage({ type: "error", text: "Network error" });
     }
   };
 
@@ -141,7 +140,7 @@ export default function PlansPage() {
             Membership Plans
             <Sparkles className="h-5 w-5 text-amber-500 animate-float" />
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base ml-[52px]">
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base sm:ml-[52px]">
             Create and manage membership tiers for your gym.
           </p>
         </div>
@@ -150,6 +149,14 @@ export default function PlansPage() {
           Add Plan
         </Button>
       </div>
+
+      {/* Message */}
+      {message && (
+        <div className={`flex items-center gap-2 rounded-xl p-3 animate-pop-in ${message.type === "success" ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20" : "bg-red-500/10 text-red-600 border border-red-500/20"}`}>
+          <span className="font-medium">{message.text}</span>
+          <button onClick={() => setMessage(null)} className="ml-auto text-xs opacity-60 hover:opacity-100">Dismiss</button>
+        </div>
+      )}
 
       {/* Plans Grid */}
       {loading ? (
